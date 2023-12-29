@@ -56,7 +56,6 @@ const connectToPeopleInList = async () => {
 
 // endregion
 
-
 // region Withdraw
 
 const withdrawButtons = [];
@@ -93,11 +92,65 @@ const completeTheWithdraw = async () => {
 const withdrawPeopleInList = async () => {
     initWithdrawButtons();
 
-    for (let i = 60; i < withdrawButtons.length; i++ ) {
+    for (let i = 20; i < withdrawButtons.length; i++ ) {
         console.log(`Withdrawing from ${i + 1} from ${withdrawButtons.length}`);
         await clickToWithdraw(withdrawButtons[i][1]);
         await completeTheWithdraw();
     }
+}
+
+// endregion
+
+// region Unfollow
+
+const followButtons = [];
+
+const initUnfollowButtons = () => {
+    const buttons = document.getElementsByClassName('artdeco-button--secondary');
+    followButtons.length = 0;
+    followButtons.push(...Object.entries(buttons).filter(btn => btn[1].innerText === 'Following'));
+}
+
+const clickToUnfollow = async (cncBtn) => {
+    return new Promise(resolve => {
+        console.log('Click the following button');
+        cncBtn.click();
+        setTimeout(() => resolve(), 500);
+    });
+}
+
+// artdeco-button artdeco-button--2 artdeco-button--primary ember-view artdeco-modal__confirm-dialog-btn
+const completeTheUnfollowing = async () => {
+    return new Promise(resolve => {
+        const sendBtn = document.getElementsByClassName('artdeco-modal__confirm-dialog-btn')[1];
+        if (sendBtn) {
+            console.log('User Unfollowed');
+            sendBtn.click();
+            setTimeout(() => resolve(), 1500);
+        } else {
+            console.log('Couldn\'t find the `Unfollow` button');
+            resolve();
+        }
+    });
+}
+
+const showMore = async () => {
+    return new Promise(resolve => {
+        document.getElementsByClassName('scaffold-finite-scroll__load-button')[0].click();
+        setTimeout(() => resolve(), 1500);
+    });
+}
+
+const unfollowPeopleInList = async () => {
+    initUnfollowButtons();
+
+    for (let i = 0; i < followButtons.length; i++ ) {
+        console.log(`Unfollow from ${i + 1} from ${followButtons.length}`);
+        await clickToUnfollow(followButtons[i][1]);
+        await completeTheUnfollowing();
+    }
+    await showMore();
+    unfollowPeopleInList();
 }
 
 // endregion
