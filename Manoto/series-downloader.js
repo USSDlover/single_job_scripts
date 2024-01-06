@@ -1,73 +1,93 @@
-import puppeteer from 'puppeteer';
-import * as fs from 'fs';
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const getTPos = require('../cursor-pos');
 
-const extractDownloadLinks = async (seriesLink) => {
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const secondsLeft = seconds % 60;
+    return `${minutes}m ${secondsLeft.toString().padStart(2, '0')}s`;
+}
 
-    try {
-        await page.goto(seriesLink);
-        await page.setViewport({ width: 600, height: 600 });
-        const pageTitle = await page.title();
-        console.log('Extracting episodes for ', pageTitle);
+const download = async (downloadLink, outputDirectory) => {
+   return new Promise((resolve, reject) => {
+       const fileName = path.basename(downloadLink);
+       const file = fs.createWriteStream(path.join(outputDirectory, fileName));
+       const request = https.get(downloadLink, async (response) => {
+           const totalBytes = response.headers['content-length'];
+           let startTime = Date.now();
+           let downloadedBytes = 0;
 
-        const episodes =  await page.$$('a.Inner');
+           const pos = await getTPos();
 
-        const episodeLinks = [];
-        for (let episode of episodes) {
-            const href = await episode.getProperty('href');
-            const epLink = await href.jsonValue();
-            episodeLinks.push(epLink);
-        }
+           response.on('data', async (chunk) => {
+               downloadedBytes += chunk.length;
 
-        const downloadLinks = [];
-        if (episodeLinks.length > 0) {
-            for (let epLink of episodeLinks) {
-                const fullLink = new URL(epLink, page.url()).href;
-                await page.goto(fullLink);
+               process.stdout.cursorTo(0, pos.rows);
+               process.stdout.clearLine(0);
 
-                const downloadBtn = await page.waitForSelector('a.button');
-                const link = await downloadBtn?.evaluate(el => el.href);
-                downloadLinks.push(link);
+               // Calculate and display download speed:
+               const elapsedTime = Date.now() - startTime;
+               const speed = (downloadedBytes / elapsedTime) * 1000 / 1024; // Bytes per second
 
-                await page.goBack();
-            }
-        }
+               // Calculate estimated remaining time:
+               const remainingBytes = totalBytes - downloadedBytes;
+               const estimatedTime = remainingBytes / speed;
+               const remainingTime = Math.ceil(estimatedTime / 1000); // Convert to seconds
 
-        if (downloadLinks.length > 0) {
-            const fileName = `download-links/${pageTitle.replaceAll('"', '')}.txt`;
+               console.log(`Downloaded ${Math.round((downloadedBytes / totalBytes) * 100)}% - ${speed.toFixed(2)} MB/s - ETA: ${formatTime(remainingTime)}`);
+           });
 
-            fs.writeFile(fileName, downloadLinks.join('\n'), err => {
-                if (err) {
-                    console.error('Error on save to file', err);
-                } else {
-                    console.log('File written successfully!');
-                }
-            })
-        }
+           response.pipe(file);
+           console.log(`Downloading ${downloadLink} to ${outputDirectory}...`); // Show progress
+       });
 
-    } catch (e) {
-        console.error(e);
-    } finally {
-        await browser.close();
-    }
-};
+       request.on('error', (error) => {
+           console.error(`Error downloading ${downloadLink}:`, error);
+           reject(`Error downloading ${downloadLink}:`, error);
+       });
 
-const linksFileName = 'links-trimmed.txt';
+       request.on('end', () => {
+           console.log(`${fileName} downloaded successfully!`);
+           resolve();
+       });
+   })
+}
 
-const extractLinks = async () => {
-    let links = [];
+const downloader = async () => {
+    const downloadDirFiles = 'download-links/dl-ready';
 
-    fs.readFile(linksFileName, 'utf8', async (err, fileData) => {
-        if (err) {
-            console.error('Error reading a file', err);
-            return;
-        }
-        links = fileData.split('\n').filter(link => link.length > 0);
+    fs.readdir(downloadDirFiles, async (err, files) => {
+       if (err) {
+           console.error('Error while reading directory', err);
+           return;
+       }
 
-        for (let link of links) {
-            await extractDownloadLinks(link);
-        }
+       for (let i = 1; i < files.length; i++) {
+           const fileWithLink = files[i];
+
+           console.log('The file', fileWithLink);
+
+           const filePath = path.join(downloadDirFiles, fileWithLink);
+           const fileContents = await fs.promises.readFile(filePath, 'utf8');
+           const downloadLinks = fileContents.split('\n');
+
+           if (downloadLinks.length === 0)
+               return;
+
+           const outputDirectory = path.join(downloadDirFiles, 'downloads', fileWithLink.replace('.txt', ''));
+
+           fs.mkdirSync(outputDirectory, { recursive: true });
+
+           for (const downloadLink of downloadLinks) {
+               try {
+                   await download(downloadLink, outputDirectory);
+               } catch (error) {
+                   console.error(`Error creating file for ${downloadLink}:`, error);
+               }
+           }
+       }
     });
 };
 
+downloader();
