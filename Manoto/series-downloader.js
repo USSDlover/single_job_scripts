@@ -3,6 +3,8 @@ const path = require('path');
 const https = require('https');
 const getTPos = require('../cursor-pos');
 
+const downloadDirFiles = 'download-links/dl-ready';
+
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secondsLeft = seconds % 60;
@@ -54,39 +56,43 @@ const download = async (downloadLink, outputDirectory) => {
    })
 }
 
-const downloader = async () => {
-    const downloadDirFiles = 'download-links/dl-ready';
+const readFilesAndDownloadThem = async (files) => {
+    let i = 0;
+    for (let fileWithLink of files) {
+        if (!fileWithLink.includes('.txt'))
+            continue;
+        console.log('Downloading the file content of', fileWithLink);
 
-    fs.readdir(downloadDirFiles, async (err, files) => {
+        const filePath = path.join(downloadDirFiles, fileWithLink);
+        const fileContents = await fs.promises.readFile(filePath, 'utf8');
+        const downloadLinks = fileContents.split('\n');
+
+        if (downloadLinks.length === 0)
+            continue;
+
+        const outputDirectory = path.join('download-links/downloads', fileWithLink.replace('.txt', ''));
+
+        fs.mkdirSync(outputDirectory, { recursive: true });
+
+        for (const downloadLink of downloadLinks) {
+            try {
+                await download(downloadLink, outputDirectory);
+            } catch (error) {
+                console.error(`Error creating file for ${downloadLink}:`, error);
+            }
+        }
+
+        i++;
+    }
+}
+
+const downloader = async () => {
+    fs.readdir(downloadDirFiles, (err, files) => {
        if (err) {
            console.error('Error while reading directory', err);
            return;
        }
-
-       for (let i = 1; i < files.length; i++) {
-           const fileWithLink = files[i];
-
-           console.log('The file', fileWithLink);
-
-           const filePath = path.join(downloadDirFiles, fileWithLink);
-           const fileContents = await fs.promises.readFile(filePath, 'utf8');
-           const downloadLinks = fileContents.split('\n');
-
-           if (downloadLinks.length === 0)
-               return;
-
-           const outputDirectory = path.join(downloadDirFiles, 'downloads', fileWithLink.replace('.txt', ''));
-
-           fs.mkdirSync(outputDirectory, { recursive: true });
-
-           for (const downloadLink of downloadLinks) {
-               try {
-                   await download(downloadLink, outputDirectory);
-               } catch (error) {
-                   console.error(`Error creating file for ${downloadLink}:`, error);
-               }
-           }
-       }
+       readFilesAndDownloadThem(files);
     });
 };
 
