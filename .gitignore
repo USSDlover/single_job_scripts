@@ -3,3 +3,4 @@ venv/
 local_files/
 .idea/
 **/node_modules/
+**/**/downloads
