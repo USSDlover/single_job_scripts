@@ -15,12 +15,8 @@ const extractDownloadLinks = async (seriesLink) => {
 
         const episodeLinks = [];
         for (let episode of episodes) {
-            const text = await episode.getProperty('textContent');
             const href = await episode.getProperty('href');
-
-            const epName = await text.jsonValue();
             const epLink = await href.jsonValue();
-
             episodeLinks.push(epLink);
         }
 
@@ -59,7 +55,7 @@ const extractDownloadLinks = async (seriesLink) => {
 
 const linksFileName = 'links-trimmed.txt';
 
-(async () => {
+const extractLinks = async () => {
     let links = [];
 
     fs.readFile(linksFileName, 'utf8', async (err, fileData) => {
@@ -73,5 +69,5 @@ const linksFileName = 'links-trimmed.txt';
             await extractDownloadLinks(link);
         }
     });
-})();
+};
 
