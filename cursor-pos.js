@@ -1,21 +1,26 @@
-const getCursorPos = () => new Promise((resolve) => {
-    const termcodes = { cursorGetPosition: '\u001b[6n' };
+async function getCursorPos() {
+    // Ask terminal for cursor position
+    process.stdout.write('\u001b[6n');
 
-    process.stdin.setEncoding('utf8');
+    // Prepare to receive response
     process.stdin.setRawMode(true);
 
-    const readfx = function () {
-        const buf = process.stdin.read();
-        const str = JSON.stringify(buf); // "\u001b[9;1R"
-        const regex = /\[(.*)/g;
-        const xy = regex.exec(str)[0].replace(/\[|R"/g, '').split(';');
-        const pos = { rows: xy[0], cols: xy[1] };
-        process.stdin.setRawMode(false);
-        resolve(pos);
-    }
+    try {
+        const response = await new Promise((resolve) => {
+            process.stdin.once('readable', () => {
+                const buf = process.stdin.read();
+                resolve(buf.toString()); // Convert response to string
+            });
+        });
 
-    process.stdin.once('readable', readfx);
-    process.stdout.write(termcodes.cursorGetPosition);
-});
+        // Extract row and column coordinates
+        const [, row, col] = response.match(/\[(\d+);(\d+)R/);
+
+        return { rows: parseInt(row), cols: parseInt(col) };
+    } finally {
+        // Ensure raw mode is disabled
+        process.stdin.setRawMode(false);
+    }
+}
 
 module.exports = getCursorPos;

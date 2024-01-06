@@ -1,4 +1,4 @@
-const getPos = require('../cursor-pos');
+const getPos = require('./cursor-pos');
 
 const AppMain = async function () {
     process.stdout.write('HELLO 123');
