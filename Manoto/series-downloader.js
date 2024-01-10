@@ -96,4 +96,9 @@ const downloader = async () => {
     });
 };
 
-downloader();
+// downloader();
+(async () => {
+    // await download('https://download.manototv.com/vod/2043384.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\Manoto\\download-links\\downloads\\اصلاحات آغاز تا پایان')
+    await download('https://download.manototv.com/vod/2043383.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\Manoto\\download-links\\downloads\\اصلاحات آغاز تا پایان')
+    // await download('https://download.manototv.com/vod/2043382.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\Manoto\\download-links\\downloads\\اصلاحات آغاز تا پایان')
+})();
