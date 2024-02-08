@@ -98,7 +98,11 @@ const downloader = async () => {
 
 // downloader();
 (async () => {
-    // await download('https://download.manototv.com/vod/2043384.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\Manoto\\download-links\\downloads\\اصلاحات آغاز تا پایان')
-    await download('https://download.manototv.com/vod/2043383.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\Manoto\\download-links\\downloads\\اصلاحات آغاز تا پایان')
-    // await download('https://download.manototv.com/vod/2043382.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\Manoto\\download-links\\downloads\\اصلاحات آغاز تا پایان')
+    // await download('https://download.manototv.com/vod/2075385.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\documentary\\download-links\\downloads\\پرویز ثابتی')
+    // await download('https://download.manototv.com/vod/2075384.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\documentary\\download-links\\downloads\\پرویز ثابتی')
+    // await download('https://download.manototv.com/vod/2075383.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\documentary\\download-links\\downloads\\پرویز ثابتی')
+    await download('https://download.manototv.com/vod/2075382.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\documentary\\download-links\\downloads\\پرویز ثابتی')
+    // await download('https://download.manototv.com/vod/2075381.mp4', 'C:\\Projects\\Personal\\Small Function Apps\\single_job_scripts\\documentary\\download-links\\downloads\\پرویز ثابتی')
 })();
+
+documentary
