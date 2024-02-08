@@ -1,3 +1,7 @@
+/**
+ * Demo script to capture the user input environment
+ */
+
 const captureButton = document.getElementById('capture-button');
 const fileInput = document.querySelector('input[type="file"]');
 
